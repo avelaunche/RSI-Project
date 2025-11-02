@@ -4,6 +4,7 @@ library(lubridate)
 library(xts)
 library(patchwork)
 
+#download and glimpse at structure. Remove number of orders. 
 spy = read_csv("spy_daily_2020.csv")
 head(spy)
 spy = spy[, c(-9)]
@@ -23,10 +24,16 @@ AAPL = filter(spy, symbol == "AAPL")
 AAPL$pos = 1:nrow(AAPL)
 
 ggplot(AAPL, aes(timestamp, open)) + 
-  geom_line()
+  geom_line() + 
+  labs(
+    title = "Apple Stock Since 2020"
+  )
 
 ggplot(AAPL, aes(timestamp, RSI)) + 
-  geom_line()
+  geom_line() + 
+  labs(
+    title = "Apple RSI Since 2020"
+  )
 
 AAPL = AAPL |>
   mutate(change = lag(close, 1)/open)
@@ -40,17 +47,28 @@ spy = spy |>
 
 spy = spy |>
   group_by(symbol) |>
-  mutate(change = 1:n(), RSI = RSI(close, n = 20))
+  mutate(change = 1:n(), RSI = RSI(close, n = 20), MA = EMA(close, n = 50), MA_change = (MA - open)/open)
 
 filter(spy, RSI < 20)
 
-p1 = ggplot(filter(spy, symbol == "AAPL"), aes(timestamp, open)) + 
+#Plot them together
+
+p1 = ggplot(filter(spy, symbol == "ABBV"), aes(timestamp, open)) + 
   geom_line()
 
-p2 = ggplot(filter(spy, symbol == "AAPL"), aes(timestamp, RSI)) + 
+p2 = ggplot(filter(spy, symbol == "ABBV"), aes(timestamp, RSI)) + 
   geom_line()
 
 p1/p2
+
+cor.test(filter(spy, symbol == "ABBV")$MA_change, filter(spy, symbol == "ABBV")$RSI)
+
+ggplot(filter(spy, symbol == "ABBV"), aes(MA_change, RSI)) + 
+  geom_point() + 
+  geom_smooth(method = "lm")
+
+#observe that as RSI increases likelihood of reversal increases. Done by collecting lots of RSI data?
+#we need to look at intercorrelation between stocks. Lots of stocks are super intercorrelated so if we wanna pick stocks we want to pick stocks less correlated
 
 spy = mutate(spy, change = 1 - close/open)
 
