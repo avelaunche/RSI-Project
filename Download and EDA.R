@@ -47,7 +47,7 @@ spy = spy |>
 
 spy = spy |>
   group_by(symbol) |>
-  mutate(change = 1:n(), RSI = RSI(close, n = 20), MA = EMA(close, n = 50), MA_change = (MA - open)/open)
+  mutate(change = 1:n(), RSI = RSI(close, n = 20), MA = EMA(close, n = 50), MA_change = (open - MA)/open)
 
 filter(spy, RSI < 20)
 
@@ -63,9 +63,16 @@ p1/p2
 
 cor.test(filter(spy, symbol == "ABBV")$MA_change, filter(spy, symbol == "ABBV")$RSI)
 
+#I'm actually so proud of this graph lol I love it. 
+
 ggplot(filter(spy, symbol == "ABBV"), aes(MA_change, RSI)) + 
-  geom_point() + 
-  geom_smooth(method = "lm")
+  geom_point(alpha = 0.2) + 
+  geom_smooth(method = "lm", se = FALSE) + 
+  labs(
+    title = "Difference between stock and moving average 50",
+    subtitle = "ABBV"
+  ) + 
+  theme_bw()
 
 #observe that as RSI increases likelihood of reversal increases. Done by collecting lots of RSI data?
 #we need to look at intercorrelation between stocks. Lots of stocks are super intercorrelated so if we wanna pick stocks we want to pick stocks less correlated
